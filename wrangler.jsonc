@@ -16,8 +16,8 @@
 	"d1_databases": [
 		{
 			"binding": "resume_prod",
-			"database_name": "resume-prod",
-			"database_id": "a0f5fc2b-9a44-46b1-826e-00e647feef55",
+			"database_name": "resume_prod",
+			"database_id": "2f244c03-3002-4d23-858d-322cf3027e07",
 			"migrations_dir": "drizzle"
 		}
 	]
