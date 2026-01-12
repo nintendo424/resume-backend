@@ -1,14 +1,15 @@
-import { int, sqliteTable, text,  } from "drizzle-orm/sqlite-core";
+import { defineRelations } from "drizzle-orm";
+import { int, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const experiences = sqliteTable("experiences", {
     id: int().primaryKey({ autoIncrement: true }),
     company: text().notNull(),
     position: text().notNull(),
-    startDate: int({ mode: "timestamp" }).notNull(),
-    endDate: int({ mode: "timestamp" }),
+    startDate: text().notNull(),
+    endDate: text().notNull(),
     details: text().notNull(),
-    skills: int(),
     enabled: int({ mode: "boolean" }).notNull(),
+    current: int({ mode: "boolean" }).notNull(),
 });
 
 export const skills = sqliteTable("skills", {
@@ -16,11 +17,10 @@ export const skills = sqliteTable("skills", {
     skill: text().notNull(),
 });
 
-export const expToSkills = sqliteTable("exp_to_skills", {
-    id: int().primaryKey({ autoIncrement: true }),
-    experienceId: int().references(() => experiences.id),
-    skillId: int().references(() => skills.id),
-});
+export const experiencesToSkills = sqliteTable("exp_to_skills", {
+    experienceId: int().notNull().references(() => experiences.id),
+    skillId: int().notNull().references(() => skills.id),
+}, (t) => [primaryKey({ columns: [t.experienceId, t.skillId] })]);
 
 export const emails = sqliteTable("emails", {
     id: int().primaryKey({ autoIncrement: true }),
@@ -29,3 +29,12 @@ export const emails = sqliteTable("emails", {
     details: text().notNull(),
     sent: int({ mode: "boolean" }).notNull(),
 })
+
+export const relations = defineRelations({ experiences, skills, experiencesToSkills }, (r) => ({
+    experiences: {
+        skills: r.many.skills({
+            from: r.experiences.id.through(r.experiencesToSkills.experienceId),
+            to: r.skills.id.through(r.experiencesToSkills.skillId),
+        })
+    }
+}));

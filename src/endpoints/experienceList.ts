@@ -1,8 +1,9 @@
-import { Bool, Num, OpenAPIRoute } from "chanfana";
+import { env } from "cloudflare:workers";
+import { OpenAPIRoute } from "chanfana";
 import { z } from "zod";
 import { Experience, type AppContext } from "../types";
 import { drizzle } from "drizzle-orm/d1";
-import { experiences } from "../schema";
+import { relations } from "../schema";
 
 export class ExperienceList extends OpenAPIRoute {
 	schema = {
@@ -14,11 +15,7 @@ export class ExperienceList extends OpenAPIRoute {
 				content: {
 					"application/json": {
 						schema: z.object({
-							series: z.object({
-								result: z.object({
-									experiences: Experience.array(),
-								}),
-							}),
+							experiences: Experience.array(),
 						}),
 					},
 				},
@@ -27,8 +24,17 @@ export class ExperienceList extends OpenAPIRoute {
 	};
 
 	async handle(c: AppContext) {
-		const db = drizzle(c.env.resume_prod);
-		const result = db.select().from(experiences).all();
-		return Response.json(result);
+		const db = drizzle(env.resume_prod, { relations });
+
+		const results = await db.query.experiences.findMany({
+			with: {
+				skills: true
+			}
+		});
+
+		return results.map(({ skills, ...rest }) => ({
+			...rest,
+			skills: skills.map(({ skill }) => skill),
+		}));
 	}
 }

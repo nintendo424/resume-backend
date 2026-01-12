@@ -1,6 +1,6 @@
 {
   "name": "cloudflare-workers-openapi",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "deploy": "wrangler deploy",
@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "chanfana": "^3.0.0",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^1.0.0-beta.10-4a43a22",
     "hono": "^4.11.3",
     "resend": "^6.7.0",
     "zod": "^4.3.5"
@@ -18,7 +18,7 @@
   "devDependencies": {
     "@types/node": "25.0.3",
     "@types/service-worker-mock": "^2.0.4",
-    "drizzle-kit": "^0.31.8",
+    "drizzle-kit": "^1.0.0-beta.10-4a43a22",
     "wrangler": "^4.58.0"
   }
 }

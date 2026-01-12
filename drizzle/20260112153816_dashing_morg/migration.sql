@@ -7,9 +7,9 @@ CREATE TABLE `emails` (
 );
 --> statement-breakpoint
 CREATE TABLE `exp_to_skills` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`experienceId` integer,
-	`skillId` integer,
+	`experienceId` integer NOT NULL,
+	`skillId` integer NOT NULL,
+	PRIMARY KEY(`experienceId`, `skillId`),
 	FOREIGN KEY (`experienceId`) REFERENCES `experiences`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`skillId`) REFERENCES `skills`(`id`) ON UPDATE no action ON DELETE no action
 );
@@ -18,11 +18,11 @@ CREATE TABLE `experiences` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`company` text NOT NULL,
 	`position` text NOT NULL,
-	`startDate` integer NOT NULL,
-	`endDate` integer,
+	`startDate` text NOT NULL,
+	`endDate` text NOT NULL,
 	`details` text NOT NULL,
-	`skills` integer,
-	`enabled` integer NOT NULL
+	`enabled` integer NOT NULL,
+	`current` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `skills` (

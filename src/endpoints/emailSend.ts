@@ -2,7 +2,7 @@ import { Bool, OpenAPIRoute } from "chanfana";
 import { z } from "zod";
 import { type AppContext, Email } from "../types";
 import { Resend } from "resend";
-import { env } from "process";
+import { env } from "cloudflare:workers";
 import { drizzle } from "drizzle-orm/d1";
 import { eq } from "drizzle-orm";
 import { emails } from "../schema";
@@ -40,9 +40,7 @@ export class EmailSend extends OpenAPIRoute {
 		const validatedData = await this.getValidatedData<typeof this.schema>();
 		const emailDetails = validatedData.body;
 
-		const resend = new Resend(env.RESEND_API_KEY);
-
-		const db = drizzle(c.env.resume_prod);
+		const db = drizzle(env.resume_prod);
 		const record = await db.insert(emails).values({
 			name: emailDetails.name,
 			email: emailDetails.email,
@@ -50,17 +48,27 @@ export class EmailSend extends OpenAPIRoute {
 			sent: false
 		}).returning({ id: emails.id });
 
-		const { data, error } = await resend.emails.send({
-			from: env.FROM_EMAIL,
-			to: env.TO_EMAIL,
-			subject: "Resume site response",
-			html: `From: ${emailDetails.name}<br>Email: ${emailDetails.email}<br>Data: ${emailDetails.details}`,
-		});
+		c.executionCtx.waitUntil(
+			(async () => {
+				const resend = new Resend(env.RESEND_API_KEY);
+				await resend.emails.send({
+					headers: {
+						"X-Entity-Ref-ID": record[0].id.toString(),
+					},
+					from: env.FROM_EMAIL,
+					to: env.TO_EMAIL,
+					subject: "Resume site response",
+					html: `From: ${emailDetails.name}<br>Email: ${emailDetails.email}<br>Data: ${emailDetails.details}`,
+				});
 
-		await db.update(emails).set({ sent: true }).where(eq(emails.id, record[0].id))
+				await db.update(emails).set({ sent: true }).where(eq(emails.id, record[0].id))
+			})()
+		);
 
 		return {
-			success: true,
+			series: {
+				success: true,
+			}
 		};
 	}
 }
