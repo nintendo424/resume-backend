@@ -5,6 +5,8 @@ import { Experience, type AppContext } from "../types";
 import { drizzle } from "drizzle-orm/d1";
 import { relations } from "../schema";
 
+const db = drizzle(env.resume_prod, { relations });
+
 export class ExperienceList extends OpenAPIRoute {
 	schema = {
 		tags: ["Resume"],
@@ -24,17 +26,17 @@ export class ExperienceList extends OpenAPIRoute {
 	};
 
 	async handle(c: AppContext) {
-		const db = drizzle(env.resume_prod, { relations });
-
 		const results = await db.query.experiences.findMany({
 			with: {
 				skills: true
 			}
 		});
 
-		return results.map(({ skills, ...rest }) => ({
-			...rest,
-			skills: skills.map(({ skill }) => skill),
-		}));
+		return {
+			experiences: results.map(({ skills, ...rest }) => ({
+				...rest,
+				skills: skills.map(({ skill }) => skill),
+			}))
+		};
 	}
 }
