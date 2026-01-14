@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { OpenAPIRoute } from "chanfana";
+import { contentJson, OpenAPIRoute } from "chanfana";
 import { z } from "zod";
 import { Experience, type AppContext } from "../types";
 import { drizzle } from "drizzle-orm/d1";
@@ -14,13 +14,9 @@ export class ExperienceList extends OpenAPIRoute {
 		responses: {
 			"200": {
 				description: "Returns a list of experiences",
-				content: {
-					"application/json": {
-						schema: z.object({
-							experiences: Experience.array(),
-						}),
-					},
-				},
+				...contentJson(z.object({
+					experiences: Experience.array(),
+				})),
 			},
 		},
 	};

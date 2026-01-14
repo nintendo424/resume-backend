@@ -1,4 +1,4 @@
-import { OpenAPIRoute } from "chanfana";
+import { contentJson, OpenAPIRoute } from "chanfana";
 import { type AppContext, Email } from "../types";
 import { Resend } from "resend";
 import { env } from "cloudflare:workers";
@@ -14,24 +14,24 @@ export class EmailSend extends OpenAPIRoute {
 		tags: ["Email"],
 		summary: "Send a new email",
 		request: {
-			body: {
-				content: {
-					"application/json": {
-						schema: Email,
-					},
-				},
-			},
+			body: contentJson(Email)
 		},
 		responses: {
 			"200": {
 				description: "Sending the email was successful",
 			},
+			"400": {
+				description: "Invalid request body",
+			}
 		},
 	};
 
 	async handle(c: AppContext) {
 		const validatedData = await this.getValidatedData<typeof this.schema>();
 		const emailDetails = validatedData.body;
+		if (!emailDetails.name || !emailDetails.email || !emailDetails.details) {
+			return c.body(null, 400);
+		}
 
 		const record = await db.insert(emails).values({
 			name: emailDetails.name,
@@ -39,7 +39,6 @@ export class EmailSend extends OpenAPIRoute {
 			details: emailDetails.details,
 			sent: false
 		}).returning({ id: emails.id });
-
 		await resend.emails.send({
 			from: env.FROM_EMAIL,
 			to: env.TO_EMAIL,
@@ -48,5 +47,7 @@ export class EmailSend extends OpenAPIRoute {
 		});
 
 		await db.update(emails).set({ sent: true }).where(eq(emails.id, record[0].id));
+
+		return c.body(null, 200);
 	}
 }
